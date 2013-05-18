@@ -41,7 +41,10 @@ def bind_api(**config):
 
             for key,value in kwargs.iteritems():
                 if value is None: continue
-                self.parameters[key] = encode_string(value)
+                if type(value) in (list, tuple):
+                    self.parameters[key + '[]'] = value
+                else:
+                    self.parameters[key] = encode_string(value)
 		
         def _build_path(self):
             for variable in re_path_template.findall(self.path):
@@ -56,7 +59,7 @@ def bind_api(**config):
         def _execute(self):
 
             url    = "%s%s%s%s" % (self.protocol,self.api.host,self.api.version,self.path)
-            params = urllib.urlencode(self.parameters) if len(self.parameters) != 0 else ''
+            params = urllib.urlencode(self.parameters, True) if len(self.parameters) != 0 else ''
 
     	    if self.require_auth and self.api.auth_handler:
                 self.api.auth_handler.apply_auth(url, self.method, self.headers, self.parameters)
